@@ -19,3 +19,7 @@ readme = "README.md"
 rust-version = "1.85"
 
 [dependencies]
+bitflags = "2.9"
+safe-mmio = "0.2.5"
+thiserror = { version = "2.0", default-features = false }
+zerocopy = "0.8.26"
