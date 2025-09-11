@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: Copyright The arm-pl061 Contributors.
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "arm-pl061"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "Arm PrimeCell GPIO (PL061) driver"
+authors = [
+    "Balint Dobszay <balint.dobszay@arm.com>",
+    "Imre Kis <imre.kis@arm.com>",
+    "Jeremi Miller <jeremimiller@google.com>",
+]
+repository = "https://git.trustedfirmware.org/arm-firmware-crates/arm-pl061.git"
+keywords = ["arm", "pl061", "gpio", "driver"]
+categories = ["hardware-support", "embedded", "no-std", "no-std::no-alloc"]
+readme = "README.md"
+rust-version = "1.85"
+
+[dependencies]
