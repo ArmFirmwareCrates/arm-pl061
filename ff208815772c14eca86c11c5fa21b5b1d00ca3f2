@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b2b1c944_e661cac7",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1000043
+      },
+      "writtenOn": "2025-09-12T06:59:56Z",
+      "side": 1,
+      "message": "The file is actually called `LICENSE-Apache-2.0`.",
+      "range": {
+        "startLine": 13,
+        "startChar": 54,
+        "endLine": 13,
+        "endChar": 68
+      },
+      "revId": "ff208815772c14eca86c11c5fa21b5b1d00ca3f2",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    }
+  ]
+}
