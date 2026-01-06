@@ -3,6 +3,29 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "c5dc3934_4a827d20",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000309
+      },
+      "writtenOn": "2026-01-06T15:52:48Z",
+      "side": 1,
+      "message": "Re-exporting `UniqueMmioPointer` makes sense, but why re-export `SharedMmioPointer`?",
+      "range": {
+        "startLine": 9,
+        "startChar": 20,
+        "endLine": 9,
+        "endChar": 37
+      },
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "29f84f4b_36612abb",
         "filename": "src/lib.rs",
         "patchSetId": 5
