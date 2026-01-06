@@ -9,7 +9,7 @@
 #[cfg(feature = "embedded-hal")]
 mod embedded_hal;
 
-use core::array;
+use core::{array, ops::Deref};
 pub use safe_mmio::UniqueMmioPointer;
 use safe_mmio::{
     SharedMmioPointer, field, field_shared,
@@ -28,6 +28,13 @@ pub struct PL061Registers {
     /// 0x000 - 0x3FC: Data Register region.
     /// Access is handled dynamically by calculating an address offset.
     gpiodata_region: [ReadPureWrite<u8>; 0x400],
+    config_registers: PL061ConfigRegisters,
+}
+
+/// The registers of a PL061 UART other than the data registers.
+#[repr(C, align(4))]
+#[derive(Clone, Eq, FromBytes, IntoBytes, PartialEq)]
+pub struct PL061ConfigRegisters {
     /// 0x400: Data Direction Register
     gpiodir: ReadPureWrite<u8>,
     _padding0: [u8; 3],
@@ -72,7 +79,7 @@ pub struct PL061Registers {
 #[error("Invalid pin id")]
 pub struct InvalidPinError;
 
-/// PL061 GPIO implementation
+/// PL061 GPIO device driver.
 pub struct PL061<'a> {
     regs: UniqueMmioPointer<'a, PL061Registers>,
 }
@@ -84,7 +91,126 @@ impl<'a> PL061<'a> {
         Self { regs }
     }
 
-    /// The pin's mask (e.g., 1 << id).
+    /// Returns the driver to configure pin and interrupt settings.
+    pub fn config(&mut self) -> PL061Config<'_> {
+        PL061Config {
+            regs: field!(self.regs, config_registers),
+        }
+    }
+
+    /// Returns the raw interrupt status for the given pin.
+    ///
+    /// This ignores the mask.
+    pub fn raw_interrupt_status(&self, pin_id: usize) -> Result<bool, InvalidPinError> {
+        raw_interrupt_status(field_shared!(self.regs, config_registers), pin_id)
+    }
+
+    /// Checks if an interrupt is pending for this pin.
+    ///
+    /// This checks the masked interrupt status.
+    pub fn is_interrupt_pending(&self, pin_id: usize) -> Result<bool, InvalidPinError> {
+        is_interrupt_pending(field_shared!(self.regs, config_registers), pin_id)
+    }
+
+    /// Reads the GPIO peripheral identification structure
+    pub fn read_identification(&self) -> Identification {
+        read_identification(field_shared!(self.regs, config_registers))
+    }
+
+    /// Returns a temporary, safe, mutable pointer to this pin's data register.
+    fn mut_data_ptr(
+        &mut self,
+        pin_id: usize,
+    ) -> Result<UniqueMmioPointer<'_, ReadPureWrite<u8>>, InvalidPinError> {
+        if pin_id >= PIN_COUNT {
+            return Err(InvalidPinError);
+        }
+        let offset = 1 << (pin_id + 2);
+        field!(self.regs, gpiodata_region)
+            .take(offset)
+            .ok_or(InvalidPinError)
+    }
+
+    /// Returns a temporary, safe pointer to this pin's data register.
+    fn data_ptr(
+        &'a self,
+        pin_id: usize,
+    ) -> Result<SharedMmioPointer<'a, ReadPureWrite<u8>>, InvalidPinError> {
+        if pin_id >= PIN_COUNT {
+            return Err(InvalidPinError);
+        }
+        let offset = 1 << (pin_id + 2);
+        field_shared!(self.regs, gpiodata_region)
+            .get(offset)
+            .ok_or(InvalidPinError)
+    }
+
+    /// Drives the pin high or low depending on the bool parameter.
+    pub fn pin_set(&mut self, pin_id: usize, high: bool) -> Result<(), InvalidPinError> {
+        // Writing any value with the pin's bit set to 1 will drive it high.
+        // Writing all 1s is the most robust way to do this.
+        // Writing any value with the pin's bit set to 0 will drive it low.
+        let mut ptr = self.mut_data_ptr(pin_id)?;
+        if high {
+            ptr.write(0xFF);
+        } else {
+            ptr.write(0x00);
+        }
+        Ok(())
+    }
+
+    /// Returns `true` if the pin's input level is high.
+    pub fn pin_is_high(&self, pin_id: usize) -> Result<bool, InvalidPinError> {
+        let ptr = self.data_ptr(pin_id)?;
+        // A masked read will return a non-zero value if the pin is high.
+        Ok(ptr.read() != 0)
+    }
+
+    /// Returns `true` if the pin's input level is low.
+    pub fn pin_is_low(&self, pin_id: usize) -> Result<bool, InvalidPinError> {
+        Ok(!self.pin_is_high(pin_id)?)
+    }
+
+    /// Returns the values of all the pins.
+    pub fn read_all(&self) -> u8 {
+        field_shared!(self.regs, gpiodata_region)
+            .get(0xff << 2)
+            .unwrap()
+            .read()
+    }
+
+    /// Writes the the given `bits` to all the pins which are included in the given `mask`.
+    pub fn write_all(&mut self, bits: u8, mask: u8) {
+        field!(self.regs, gpiodata_region)
+            .get(usize::from(mask) << 2)
+            .unwrap()
+            .write(bits);
+    }
+
+    /// Splits out the individual pins, so they can be owned separately.
+    pub fn split(self) -> (PL061Config<'a>, [Pin<'a>; PIN_COUNT]) {
+        // SAFETY: We don't pass the same field name twice.
+        let (gpiodata_region, config_registers) =
+            unsafe { split_fields!(self.regs, gpiodata_region, config_registers) };
+        let pins = gpiodata_region
+            .split_some(array::from_fn(|pin_id| 1 << (pin_id + 2)))
+            .map(|register| Pin { register });
+        let config = PL061Config {
+            regs: config_registers,
+        };
+        (config, pins)
+    }
+}
+
+/// Driver for the configuration registers of a PL061 GPIO device.
+///
+/// This allows the pins to be configured, but not actually read or written.
+pub struct PL061Config<'a> {
+    regs: UniqueMmioPointer<'a, PL061ConfigRegisters>,
+}
+
+impl PL061Config<'_> {
+    /// The pin's mask (i.e., 1 << id).
     fn mask(pin_id: usize) -> Result<u8, InvalidPinError> {
         if pin_id >= PIN_COUNT {
             return Err(InvalidPinError);
@@ -95,9 +221,8 @@ impl<'a> PL061<'a> {
     /// Configures the pin as an input.
     pub fn into_input(&mut self, pin_id: usize) -> Result<(), InvalidPinError> {
         let mask = Self::mask(pin_id)?;
-        let mut gpiodir_ptr = field!(self.regs, gpiodir);
-        let val = gpiodir_ptr.read();
-        gpiodir_ptr.write(val & !mask);
+        let val = field_shared!(self.regs, gpiodir).read();
+        field!(self.regs, gpiodir).write(val & !mask);
         Ok(())
     }
 
@@ -176,13 +301,14 @@ impl<'a> PL061<'a> {
     ///
     /// This ignores the mask.
     pub fn raw_interrupt_status(&self, pin_id: usize) -> Result<bool, InvalidPinError> {
-        Ok(field_shared!(self.regs, gpioris).read() & Self::mask(pin_id)? != 0)
+        raw_interrupt_status(*self.regs.deref(), pin_id)
     }
 
     /// Checks if an interrupt is pending for this pin.
+    ///
     /// This checks the masked interrupt status.
     pub fn is_interrupt_pending(&self, pin_id: usize) -> Result<bool, InvalidPinError> {
-        Ok(field_shared!(self.regs, gpiomis).read() & Self::mask(pin_id)? != 0)
+        is_interrupt_pending(*self.regs.deref(), pin_id)
     }
 
     /// Clears edge detection logic for this pin.
@@ -192,98 +318,9 @@ impl<'a> PL061<'a> {
         Ok(())
     }
 
-    /// Returns a temporary, safe, mutable pointer to this pin's data register.
-    fn mut_data_ptr(
-        &mut self,
-        pin_id: usize,
-    ) -> Result<UniqueMmioPointer<'_, ReadPureWrite<u8>>, InvalidPinError> {
-        if pin_id >= PIN_COUNT {
-            return Err(InvalidPinError);
-        }
-        let offset = 1 << (pin_id + 2);
-        field!(self.regs, gpiodata_region)
-            .take(offset)
-            .ok_or(InvalidPinError)
-    }
-
-    /// Returns a temporary, safe pointer to this pin's data register.
-    fn data_ptr(
-        &self,
-        pin_id: usize,
-    ) -> Result<SharedMmioPointer<'_, ReadPureWrite<u8>>, InvalidPinError> {
-        if pin_id >= PIN_COUNT {
-            return Err(InvalidPinError);
-        }
-        let offset = 1 << (pin_id + 2);
-        field_shared!(self.regs, gpiodata_region)
-            .get(offset)
-            .ok_or(InvalidPinError)
-    }
-
-    /// Drives the pin high or low depending on the bool parameter.
-    pub fn pin_set(&mut self, pin_id: usize, high: bool) -> Result<(), InvalidPinError> {
-        // Writing any value with the pin's bit set to 1 will drive it high.
-        // Writing all 1s is the most robust way to do this.
-        // Writing any value with the pin's bit set to 0 will drive it low.
-        let mut ptr = self.mut_data_ptr(pin_id)?;
-        if high {
-            ptr.write(0xFF);
-        } else {
-            ptr.write(0x00);
-        }
-        Ok(())
-    }
-
-    /// Returns `true` if the pin's input level is high.
-    pub fn pin_is_high(&self, pin_id: usize) -> Result<bool, InvalidPinError> {
-        let ptr = self.data_ptr(pin_id)?;
-        // A masked read will return a non-zero value if the pin is high.
-        Ok(ptr.read() != 0)
-    }
-
-    /// Returns `true` if the pin's input level is low.
-    pub fn pin_is_low(&self, pin_id: usize) -> Result<bool, InvalidPinError> {
-        Ok(!self.pin_is_high(pin_id)?)
-    }
-
-    /// Returns the values of all the pins.
-    pub fn read_all(&self) -> u8 {
-        field_shared!(self.regs, gpiodata_region)
-            .get(0xff << 2)
-            .unwrap()
-            .read()
-    }
-
-    /// Writes the the given `bits` to all the pins which are included in the given `mask`.
-    pub fn write_all(&mut self, bits: u8, mask: u8) {
-        field!(self.regs, gpiodata_region)
-            .get(usize::from(mask) << 2)
-            .unwrap()
-            .write(bits);
-    }
-
     /// Read GPIO peripheral identification structure
     pub fn read_identification(&self) -> Identification {
-        let id0 = field_shared!(self.regs, gpioperiphid0).read();
-        let id1 = field_shared!(self.regs, gpioperiphid1).read();
-        let id2 = field_shared!(self.regs, gpioperiphid2).read();
-        let id3 = field_shared!(self.regs, gpioperiphid3).read();
-
-        Identification {
-            part_number: ((id1 & 0x0F) << 8) as u16 | (id0 & 0xFF) as u16,
-            designer: ((id2 & 0x0F) << 4) as u8 | ((id1 & 0xF0) >> 4) as u8,
-            revision: ((id2 & 0xF0) >> 4) as u8,
-            configuration: (id3 & 0xFF) as u8,
-        }
-    }
-
-    /// Splits out the individual pins, so they can be owned separately.
-    pub fn split(self) -> [Pin<'a>; PIN_COUNT] {
-        // SAFETY: We only pass a single field name.
-        let gpiodata_region = unsafe { split_fields!(self.regs, gpiodata_region) };
-        gpiodata_region
-            .split_some(array::from_fn(|pin_id| 1 << (pin_id + 2)))
-            .map(|register| Pin { register })
+        read_identification(*self.regs.deref())
     }
 }
 
@@ -343,6 +380,37 @@ impl Identification {
     }
 }
 
+/// Reads the GPIO peripheral identification structure
+fn read_identification(
+    config_registers: SharedMmioPointer<PL061ConfigRegisters>,
+) -> Identification {
+    let id0 = field_shared!(config_registers, gpioperiphid0).read();
+    let id1 = field_shared!(config_registers, gpioperiphid1).read();
+    let id2 = field_shared!(config_registers, gpioperiphid2).read();
+    let id3 = field_shared!(config_registers, gpioperiphid3).read();
+
+    Identification {
+        part_number: ((id1 & 0x0F) << 8) as u16 | (id0 & 0xFF) as u16,
+        designer: ((id2 & 0x0F) << 4) as u8 | ((id1 & 0xF0) >> 4) as u8,
+        revision: ((id2 & 0xF0) >> 4) as u8,
+        configuration: (id3 & 0xFF) as u8,
+    }
+}
+
+fn raw_interrupt_status(
+    config_registers: SharedMmioPointer<PL061ConfigRegisters>,
+    pin_id: usize,
+) -> Result<bool, InvalidPinError> {
+    Ok(field_shared!(config_registers, gpioris).read() & PL061Config::mask(pin_id)? != 0)
+}
+
+fn is_interrupt_pending(
+    config_registers: SharedMmioPointer<PL061ConfigRegisters>,
+    pin_id: usize,
+) -> Result<bool, InvalidPinError> {
+    Ok(field_shared!(config_registers, gpiomis).read() & PL061Config::mask(pin_id)? != 0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -385,13 +453,10 @@ mod tests {
 
     #[test]
     fn mask_checks() {
-        let mut regs = FakePL061Registers::new();
-        let _pl061 = pl061_for_testing(&mut regs);
-
-        assert_eq!(PL061::mask(0), Ok(1));
-        assert_eq!(PL061::mask(1), Ok(2));
-        assert_eq!(PL061::mask(2), Ok(4));
-        assert_eq!(PL061::mask(8), Err(InvalidPinError));
+        assert_eq!(PL061Config::mask(0), Ok(1));
+        assert_eq!(PL061Config::mask(1), Ok(2));
+        assert_eq!(PL061Config::mask(2), Ok(4));
+        assert_eq!(PL061Config::mask(8), Err(InvalidPinError));
     }
 
     #[test]
@@ -413,7 +478,7 @@ mod tests {
         // Pin 0 is configured as input at first.
         assert_eq!(0u32, regs.reg_read(GPIODIR));
         let mut pl061 = pl061_for_testing(&mut regs);
-        pl061.into_output(0).unwrap();
+        pl061.config().into_output(0).unwrap();
 
         // Check that pin 0 is now an output.
         assert_eq!(1u32, regs.reg_read(GPIODIR));
@@ -428,7 +493,7 @@ mod tests {
         assert_eq!(0u32, regs.reg_read(GPIODIR));
         {
             let mut pl061 = pl061_for_testing(&mut regs);
-            pl061.into_output(0).unwrap();
+            pl061.config().into_output(0).unwrap();
         }
 
         // Check that pin 0 is now an output.
@@ -436,7 +501,7 @@ mod tests {
 
         {
             let mut pl061 = pl061_for_testing(&mut regs);
-            pl061.into_input(0).unwrap();
+            pl061.config().into_input(0).unwrap();
         }
 
         // Check that pin 0 is now an input again.
@@ -450,7 +515,7 @@ mod tests {
         assert_eq!(0u32, regs.reg_read(GPIOIE));
         let mut pl061 = pl061_for_testing(&mut regs);
 
-        pl061.enable_interrupt(0, true).unwrap();
+        pl061.config().enable_interrupt(0, true).unwrap();
         assert_eq!(1u32, regs.reg_read(GPIOIE));
     }
 
@@ -462,7 +527,7 @@ mod tests {
 
         {
             let mut pl061 = pl061_for_testing(&mut regs);
-            pl061.enable_interrupt(0, true).unwrap();
+            pl061.config().enable_interrupt(0, true).unwrap();
         }
 
         // Check interrupts are enabled.
@@ -470,7 +535,7 @@ mod tests {
 
         {
             let mut pl061 = pl061_for_testing(&mut regs);
-            pl061.enable_interrupt(0, false).unwrap();
+            pl061.config().enable_interrupt(0, false).unwrap();
         }
 
         // Check interrupts are disabled.
@@ -499,7 +564,7 @@ mod tests {
         let mut regs = FakePL061Registers::new();
         let mut pl061 = pl061_for_testing(&mut regs);
 
-        pl061.clear_interrupt_flag(0).unwrap();
+        pl061.config().clear_interrupt_flag(0).unwrap();
 
         assert_eq!(1u32, regs.reg_read(GPIOIC));
     }
@@ -518,6 +583,7 @@ mod tests {
             assert_eq!(0u32, regs.reg_read(GPIOIS));
             let mut pl061 = pl061_for_testing(&mut regs);
             pl061
+                .config()
                 .set_interrupt_config(0, InterruptTrigger::LowLevel)
                 .unwrap();
             assert_eq!(1u32, regs.reg_read(GPIOIS));
@@ -526,6 +592,7 @@ mod tests {
             assert_eq!(1u32, regs.reg_read(GPIOIS));
             let mut pl061 = pl061_for_testing(&mut regs);
             pl061
+                .config()
                 .set_interrupt_config(0, InterruptTrigger::FallingEdge)
                 .unwrap();
             assert_eq!(0u32, regs.reg_read(GPIOIS));
@@ -535,6 +602,7 @@ mod tests {
             assert_eq!(0u32, regs.reg_read(GPIOIBE));
             let mut pl061 = pl061_for_testing(&mut regs);
             pl061
+                .config()
                 .set_interrupt_config(0, InterruptTrigger::BothEdges)
                 .unwrap();
             assert_eq!(1u32, regs.reg_read(GPIOIBE));
@@ -543,6 +611,7 @@ mod tests {
             assert_eq!(1u32, regs.reg_read(GPIOIBE));
             let mut pl061 = pl061_for_testing(&mut regs);
             pl061
+                .config()
                 .set_interrupt_config(0, InterruptTrigger::FallingEdge)
                 .unwrap();
             assert_eq!(0u32, regs.reg_read(GPIOIBE));
@@ -552,6 +621,7 @@ mod tests {
             assert_eq!(0u32, regs.reg_read(GPIOIEV));
             let mut pl061 = pl061_for_testing(&mut regs);
             pl061
+                .config()
                 .set_interrupt_config(0, InterruptTrigger::RisingEdge)
                 .unwrap();
             assert_eq!(1u32, regs.reg_read(GPIOIEV));
@@ -560,6 +630,7 @@ mod tests {
             assert_eq!(1u32, regs.reg_read(GPIOIEV));
             let mut pl061 = pl061_for_testing(&mut regs);
             pl061
+                .config()
                 .set_interrupt_config(0, InterruptTrigger::FallingEdge)
                 .unwrap();
             assert_eq!(0u32, regs.reg_read(GPIOIEV));
