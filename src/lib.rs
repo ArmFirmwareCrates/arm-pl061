@@ -253,6 +253,22 @@ impl<'a> PL061<'a> {
         Ok(!self.pin_is_high(pin_id)?)
     }
 
+    /// Returns the values of all the pins.
+    pub fn read_all(&self) -> u8 {
+        field_shared!(self.regs, gpiodata_region)
+            .get(0xff << 2)
+            .unwrap()
+            .read()
+    }
+
+    /// Writes the the given `bits` to all the pins which are included in the given `mask`.
+    pub fn write_all(&mut self, bits: u8, mask: u8) {
+        field!(self.regs, gpiodata_region)
+            .get(usize::from(mask) << 2)
+            .unwrap()
+            .write(bits);
+    }
+
     /// Read GPIO peripheral identification structure
     pub fn read_identification(&self) -> Identification {
         let id0 = field_shared!(self.regs, gpioperiphid0).read();
