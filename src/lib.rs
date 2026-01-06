@@ -317,7 +317,7 @@ mod tests {
         }
     }
 
-    fn pl061_for_testing(regs: &mut FakePL061Registers) -> PL061 {
+    fn pl061_for_testing(regs: &mut FakePL061Registers) -> PL061<'_> {
         PL061::new(UniqueMmioPointer::from(transmute_mut!(regs)))
     }
 
