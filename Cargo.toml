@@ -11,6 +11,7 @@ authors = [
     "Balint Dobszay <balint.dobszay@arm.com>",
     "Imre Kis <imre.kis@arm.com>",
     "Jeremi Miller <jeremimiller@google.com>",
+    "Andrew Walbran <qwandor@google.com>",
 ]
 repository = "https://git.trustedfirmware.org/arm-firmware-crates/arm-pl061.git"
 keywords = ["arm", "pl061", "gpio", "driver"]
