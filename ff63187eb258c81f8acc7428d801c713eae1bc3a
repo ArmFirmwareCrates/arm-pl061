@@ -1,0 +1,118 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "29f84f4b_36612abb",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1000309
+      },
+      "writtenOn": "2026-01-06T14:25:58Z",
+      "side": 1,
+      "message": "Do you expect to add other variants to this enum in future? If not, let\u0027s just make it a struct, and maybe call it something like `InvalidPinError`.",
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e7fe4bf6_b3a66060",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1000309
+      },
+      "writtenOn": "2026-01-06T14:25:58Z",
+      "side": 1,
+      "message": "This doesn\u0027t need to take `self`, it never uses it.",
+      "range": {
+        "startLine": 85,
+        "startChar": 13,
+        "endLine": 85,
+        "endChar": 17
+      },
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ffce13f6_af4ea553",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1000309
+      },
+      "writtenOn": "2026-01-06T14:25:58Z",
+      "side": 1,
+      "message": "Let\u0027s make this method consistent with the other below, and store `gpiodir` in a local variable as it is used twice (for the read and the write).",
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "431c2582_2bfc9145",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1000309
+      },
+      "writtenOn": "2026-01-06T14:25:58Z",
+      "side": 1,
+      "message": "There are a bunch of different methods here to configure different aspects of the interrupt trigger, and it seems like some of them probably don\u0027t make sense together. For example, what happens if you combine `set_interrupt_both_edges` with `set_interrupt_event_rising_high`?\n\nHow about instead having a single method that takes the pin number and an enum for the interrupt configuration, and sets the appropriate registers?\n\nSo you could call something like `set_interrupt_trigger(5, InterruptTrigger::RisingEdge)`. Possible enum values would be something like `RisingEdge`, `FallingEdge`, `BothEdges`, `HighLevel`, `LowLevel`, or whatever other combinations are valid.",
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "771b6fa7_ce9e763f",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1000309
+      },
+      "writtenOn": "2026-01-06T14:25:58Z",
+      "side": 1,
+      "message": "Why not return a `Result` here, with an `InvalidPinId` if the pin ID is out of bounds?",
+      "range": {
+        "startLine": 201,
+        "startChar": 9,
+        "endLine": 201,
+        "endChar": 15
+      },
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "25f93089_ba0de264",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1000309
+      },
+      "writtenOn": "2026-01-06T14:25:58Z",
+      "side": 1,
+      "message": "Combine this with the other impl block.",
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    }
+  ]
+}
