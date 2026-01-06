@@ -6,10 +6,15 @@
 #![deny(clippy::undocumented_unsafe_blocks)]
 #![deny(unsafe_op_in_unsafe_fn)]
 
+#[cfg(feature = "embedded-hal")]
+mod embedded_hal;
+
+use core::array;
 pub use safe_mmio::UniqueMmioPointer;
 use safe_mmio::{
     SharedMmioPointer, field, field_shared,
     fields::{ReadPure, ReadPureWrite, WriteOnly},
+    split_fields,
 };
 use thiserror::Error;
 use zerocopy::{FromBytes, IntoBytes};
@@ -270,6 +275,32 @@ impl<'a> PL061<'a> {
             revision: ((id2 & 0xF0) >> 4) as u8,
             configuration: (id3 & 0xFF) as u8,
         }
+    }
+
+    /// Splits out the individual pins, so they can be owned separately.
+    pub fn split(self) -> [Pin<'a>; PIN_COUNT] {
+        // SAFETY: We only pass a single field name.
+        let gpiodata_region = unsafe { split_fields!(self.regs, gpiodata_region) };
+        gpiodata_region
+            .split_some(array::from_fn(|pin_id| 1 << (pin_id + 2)))
+            .map(|register| Pin { register })
+    }
+}
+
+/// A single GPIO pin from a PL061 device.
+pub struct Pin<'a> {
+    register: UniqueMmioPointer<'a, ReadPureWrite<u8>>,
+}
+
+impl Pin<'_> {
+    /// Sets the pin high if `value` is true, or low if it is false.
+    pub fn set(&mut self, value: bool) {
+        self.register.write(if value { 0xff } else { 0 });
+    }
+
+    /// Returns `true` if the pin's input level is high.
+    pub fn is_high(&self) -> bool {
+        self.register.read() != 0
     }
 }
 
