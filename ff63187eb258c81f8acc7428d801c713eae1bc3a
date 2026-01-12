@@ -72,6 +72,30 @@
       "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "04a7c1ea_30822064",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1001414
+      },
+      "writtenOn": "2026-01-12T14:09:18Z",
+      "side": 1,
+      "message": "Right, thanks! Corrected.",
+      "parentUuid": "27c94b66_c3c1f5c6",
+      "range": {
+        "startLine": 9,
+        "startChar": 20,
+        "endLine": 9,
+        "endChar": 37
+      },
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "29f84f4b_36612abb",
@@ -302,6 +326,24 @@
       "side": 1,
       "message": "I guess it depends on the context. If you know you always want to set a pin high or low then I agree with you. But I think it\u0027s also common to want to pass the value from somewhere else, and in that case having to do something like `if value { pin_set_high(7); } else { pin_set_low(7); }` is a pain. The `embedded-hal` traits solve this by having both, but that\u0027s not great either...",
       "parentUuid": "b8821b47_9b5aae6a",
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a09fb920_96b46f19",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1001414
+      },
+      "writtenOn": "2026-01-12T14:09:18Z",
+      "side": 1,
+      "message": "Ah, makes sense, thank you. Done.",
+      "parentUuid": "b2d21fa3_4869df66",
       "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
       "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
     },
