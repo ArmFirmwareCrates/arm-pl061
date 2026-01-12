@@ -50,6 +50,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "27c94b66_c3c1f5c6",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000309
+      },
+      "writtenOn": "2026-01-12T11:31:24Z",
+      "side": 1,
+      "message": "That\u0027s a private method though, not part of the crate\u0027s public API.",
+      "parentUuid": "07bcd90d_ee34b04e",
+      "range": {
+        "startLine": 9,
+        "startChar": 20,
+        "endLine": 9,
+        "endChar": 37
+      },
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "29f84f4b_36612abb",
         "filename": "src/lib.rs",
         "patchSetId": 5
@@ -260,6 +284,24 @@
       "side": 1,
       "message": "I thought for example `pin_set_high(7)`, `pin_set_low(7)` is more readable than `pin_set(7, true)`, `pin_set(7, false)`, but happy to change it if you think otherwise.",
       "parentUuid": "9ebcbefd_0971830c",
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b2d21fa3_4869df66",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1000309
+      },
+      "writtenOn": "2026-01-12T11:31:24Z",
+      "side": 1,
+      "message": "I guess it depends on the context. If you know you always want to set a pin high or low then I agree with you. But I think it\u0027s also common to want to pass the value from somewhere else, and in that case having to do something like `if value { pin_set_high(7); } else { pin_set_low(7); }` is a pain. The `embedded-hal` traits solve this by having both, but that\u0027s not great either...",
+      "parentUuid": "b8821b47_9b5aae6a",
       "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
       "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
     },
