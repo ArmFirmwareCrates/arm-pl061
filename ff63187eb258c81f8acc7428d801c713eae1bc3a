@@ -26,6 +26,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "07bcd90d_ee34b04e",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1001414
+      },
+      "writtenOn": "2026-01-12T11:12:42Z",
+      "side": 1,
+      "message": "I\u0027m returning `SharedMmioPointer` in the `data_ptr` method, I thought then it makes sense to reexport that as well, is that ok?",
+      "parentUuid": "c5dc3934_4a827d20",
+      "range": {
+        "startLine": 9,
+        "startChar": 20,
+        "endLine": 9,
+        "endChar": 37
+      },
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "29f84f4b_36612abb",
         "filename": "src/lib.rs",
         "patchSetId": 5
@@ -37,6 +61,24 @@
       "writtenOn": "2026-01-06T14:25:58Z",
       "side": 1,
       "message": "Do you expect to add other variants to this enum in future? If not, let\u0027s just make it a struct, and maybe call it something like `InvalidPinError`.",
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "eda51d76_54c77590",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1001414
+      },
+      "writtenOn": "2026-01-12T11:12:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "29f84f4b_36612abb",
       "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
       "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
     },
@@ -64,6 +106,30 @@
       "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "1da050dc_5d06bd5e",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1001414
+      },
+      "writtenOn": "2026-01-12T11:12:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e7fe4bf6_b3a66060",
+      "range": {
+        "startLine": 85,
+        "startChar": 13,
+        "endLine": 85,
+        "endChar": 17
+      },
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "ffce13f6_af4ea553",
@@ -77,6 +143,24 @@
       "writtenOn": "2026-01-06T14:25:58Z",
       "side": 1,
       "message": "Let\u0027s make this method consistent with the other below, and store `gpiodir` in a local variable as it is used twice (for the read and the write).",
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9c8e84fd_e3d18a3a",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1001414
+      },
+      "writtenOn": "2026-01-12T11:12:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ffce13f6_af4ea553",
       "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
       "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
     },
@@ -121,6 +205,30 @@
       "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "157cfdf0_7b2d3e67",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1001414
+      },
+      "writtenOn": "2026-01-12T11:12:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "771b6fa7_ce9e763f",
+      "range": {
+        "startLine": 201,
+        "startChar": 9,
+        "endLine": 201,
+        "endChar": 15
+      },
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "9ebcbefd_0971830c",
@@ -134,6 +242,24 @@
       "writtenOn": "2026-01-06T15:30:59Z",
       "side": 1,
       "message": "Rather than having separate methods to set the pin high or low, how about a single `set_pin` method that takes a boolean value to set?",
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b8821b47_9b5aae6a",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1001414
+      },
+      "writtenOn": "2026-01-12T11:12:42Z",
+      "side": 1,
+      "message": "I thought for example `pin_set_high(7)`, `pin_set_low(7)` is more readable than `pin_set(7, true)`, `pin_set(7, false)`, but happy to change it if you think otherwise.",
+      "parentUuid": "9ebcbefd_0971830c",
       "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
       "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
     },
@@ -161,6 +287,30 @@
       "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "cc77f2a3_cb0e64a0",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1001414
+      },
+      "writtenOn": "2026-01-12T11:12:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6be3d7f3_7b9d1459",
+      "range": {
+        "startLine": 234,
+        "startChar": 24,
+        "endLine": 234,
+        "endChar": 26
+      },
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "25f93089_ba0de264",
@@ -174,6 +324,24 @@
       "writtenOn": "2026-01-06T14:25:58Z",
       "side": 1,
       "message": "Combine this with the other impl block.",
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2ff6a945_38b66989",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1001414
+      },
+      "writtenOn": "2026-01-12T11:12:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "25f93089_ba0de264",
       "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
       "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
     }
