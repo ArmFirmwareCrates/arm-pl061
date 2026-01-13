@@ -203,7 +203,7 @@ impl<'a> PL061<'a> {
     fn mut_data_ptr(
         &mut self,
         pin_id: usize,
-    ) -> Result<UniqueMmioPointer<ReadPureWrite<u8>>, InvalidPinError> {
+    ) -> Result<UniqueMmioPointer<'_, ReadPureWrite<u8>>, InvalidPinError> {
         if pin_id >= PIN_COUNT {
             return Err(InvalidPinError);
         }
@@ -215,9 +215,9 @@ impl<'a> PL061<'a> {
 
     /// Returns a temporary, safe pointer to this pin's data register.
     fn data_ptr(
-        &'a self,
+        &self,
         pin_id: usize,
-    ) -> Result<SharedMmioPointer<'a, ReadPureWrite<u8>>, InvalidPinError> {
+    ) -> Result<SharedMmioPointer<'_, ReadPureWrite<u8>>, InvalidPinError> {
         if pin_id >= PIN_COUNT {
             return Err(InvalidPinError);
         }
@@ -340,7 +340,7 @@ mod tests {
         }
     }
 
-    fn pl061_for_testing(regs: &mut FakePL061Registers) -> PL061 {
+    fn pl061_for_testing(regs: &mut FakePL061Registers) -> PL061<'_> {
         PL061::new(UniqueMmioPointer::from(transmute_mut!(regs)))
     }
 
@@ -456,7 +456,7 @@ mod tests {
 
         let pl061 = pl061_for_testing(&mut regs);
 
-        assert_eq!(true, pl061.is_interrupt_pending(0).unwrap());
+        assert!(pl061.is_interrupt_pending(0).unwrap());
     }
 
     #[test]
@@ -582,14 +582,14 @@ mod tests {
             let pl061 = pl061_for_testing(&mut regs);
             let identification = pl061.read_identification();
             assert_eq!(expected_identification, identification);
-            assert_eq!(true, identification.is_valid());
+            assert!(identification.is_valid());
         }
         // Invalidate the peripheral identification
         regs.reg_write(GPIO_PERIPH_ID_0, 0xFF);
         {
             let pl061 = pl061_for_testing(&mut regs);
             let identification = pl061.read_identification();
-            assert_eq!(false, identification.is_valid());
+            assert!(!identification.is_valid());
         }
     }
 }
