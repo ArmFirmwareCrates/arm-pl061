@@ -105,24 +105,73 @@ impl<'a> PL061<'a> {
         Ok(())
     }
 
-    // --- Interrupt Configuration ---
-
-    /// Enables the interrupt for this pin.
-    pub fn enable_interrupt(&mut self, pin_id: usize) -> Result<(), InvalidPinError> {
+    /// Enables or disables (masks) the interrupt for this pin.
+    pub fn enable_interrupt(&mut self, pin_id: usize, enable: bool) -> Result<(), InvalidPinError> {
         let mask = Self::mask(pin_id)?;
-        let mut ptr = field!(self.regs, gpioie);
-        let val = ptr.read();
-        ptr.write(val | mask);
+        let mut ie = field!(self.regs, gpioie);
+        if enable {
+            ie.write(ie.read() | mask);
+        } else {
+            ie.write(ie.read() & !mask);
+        }
         Ok(())
     }
 
-    /// Disables the interrupt for this pin.
-    pub fn disable_interrupt(&mut self, pin_id: usize) -> Result<(), InvalidPinError> {
+    /// Configures what should trigger an interrupt for the given pin.
+    ///
+    /// The interrupt must also be enabled with `enable_interrupt`.
+    pub fn set_interrupt_config(
+        &mut self,
+        pin_id: usize,
+        config: InterruptTrigger,
+    ) -> Result<(), InvalidPinError> {
         let mask = Self::mask(pin_id)?;
-        let mut ptr = field!(self.regs, gpioie);
-        let val = ptr.read();
-        ptr.write(val & !mask);
+
+        match config {
+            InterruptTrigger::RisingEdge => {
+                let mut is = field!(self.regs, gpiois);
+                is.write(is.read() & !mask);
+                let mut ibe = field!(self.regs, gpioibe);
+                ibe.write(ibe.read() & !mask);
+                let mut iev = field!(self.regs, gpioiev);
+                iev.write(iev.read() | mask);
+            }
+            InterruptTrigger::FallingEdge => {
+                let mut is = field!(self.regs, gpiois);
+                is.write(is.read() & !mask);
+                let mut ibe = field!(self.regs, gpioibe);
+                ibe.write(ibe.read() & !mask);
+                let mut iev = field!(self.regs, gpioiev);
+                iev.write(iev.read() & !mask);
+            }
+            InterruptTrigger::BothEdges => {
+                let mut is = field!(self.regs, gpiois);
+                is.write(is.read() & !mask);
+                let mut ibe = field!(self.regs, gpioibe);
+                ibe.write(ibe.read() | mask);
+            }
+            InterruptTrigger::HighLevel => {
+                let mut iev = field!(self.regs, gpioiev);
+                iev.write(iev.read() | mask);
+                let mut is = field!(self.regs, gpiois);
+                is.write(is.read() | mask);
+            }
+            InterruptTrigger::LowLevel => {
+                let mut iev = field!(self.regs, gpioiev);
+                iev.write(iev.read() & !mask);
+                let mut is = field!(self.regs, gpiois);
+                is.write(is.read() | mask);
+            }
+        }
+
         Ok(())
+    }
+
+    /// Returns the raw interrupt status for the given pin.
+    ///
+    /// This ignores the mask.
+    pub fn raw_interrupt_status(&self, pin_id: usize) -> Result<bool, InvalidPinError> {
+        Ok(field_shared!(self.regs, gpioris).read() & Self::mask(pin_id)? != 0)
     }
 
     /// Checks if an interrupt is pending for this pin.
@@ -135,67 +184,6 @@ impl<'a> PL061<'a> {
     pub fn clear_interrupt_flag(&mut self, pin_id: usize) -> Result<(), InvalidPinError> {
         let mask = Self::mask(pin_id)?;
         field!(self.regs, gpioic).write(mask);
-        Ok(())
-    }
-
-    /// Configures the interrupt to be edge-sensitive.
-    pub fn set_interrupt_edge_sensitive(&mut self, pin_id: usize) -> Result<(), InvalidPinError> {
-        let mask = Self::mask(pin_id)?;
-        let mut ptr = field!(self.regs, gpiois);
-        let val = ptr.read();
-        ptr.write(val & !mask);
-        Ok(())
-    }
-
-    /// Configures the interrupt to be level-sensitive.
-    pub fn set_interrupt_level_sensitive(&mut self, pin_id: usize) -> Result<(), InvalidPinError> {
-        let mask = Self::mask(pin_id)?;
-        let mut ptr = field!(self.regs, gpiois);
-        let val = ptr.read();
-        ptr.write(val | mask);
-        Ok(())
-    }
-
-    /// Configures the interrupt to trigger on a single edge (rising or falling,
-    /// as determined by `set_interrupt_event`).
-    pub fn set_interrupt_single_edge(&mut self, pin_id: usize) -> Result<(), InvalidPinError> {
-        let mask = Self::mask(pin_id)?;
-        let mut ptr = field!(self.regs, gpioibe);
-        let val = ptr.read();
-        ptr.write(val & !mask);
-        Ok(())
-    }
-
-    /// Configures the interrupt to trigger on both rising and falling edges.
-    pub fn set_interrupt_both_edges(&mut self, pin_id: usize) -> Result<(), InvalidPinError> {
-        let mask = Self::mask(pin_id)?;
-        let mut ptr = field!(self.regs, gpioibe);
-        let val = ptr.read();
-        ptr.write(val | mask);
-        Ok(())
-    }
-
-    /// Configures the interrupt event to be a rising edge or a high level.
-    pub fn set_interrupt_event_rising_high(
-        &mut self,
-        pin_id: usize,
-    ) -> Result<(), InvalidPinError> {
-        let mask = Self::mask(pin_id)?;
-        let mut ptr = field!(self.regs, gpioiev);
-        let val = ptr.read();
-        ptr.write(val | mask);
-        Ok(())
-    }
-
-    /// Configures the interrupt event to be a falling edge or a low level.
-    pub fn set_interrupt_event_falling_low(
-        &mut self,
-        pin_id: usize,
-    ) -> Result<(), InvalidPinError> {
-        let mask = Self::mask(pin_id)?;
-        let mut ptr = field!(self.regs, gpioiev);
-        let val = ptr.read();
-        ptr.write(val & !mask);
         Ok(())
     }
 
@@ -283,6 +271,21 @@ impl<'a> PL061<'a> {
             configuration: (id3 & 0xFF) as u8,
         }
     }
+}
+
+/// The configuration for what triggers an interrupt on a particular pin.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum InterruptTrigger {
+    /// An interrupt is triggered on a transition from low to high.
+    RisingEdge,
+    /// An interrupt is triggered on a transition from high to low.
+    FallingEdge,
+    /// Configures the interrupt to trigger on both rising and falling edges.
+    BothEdges,
+    /// An interrupt is triggered whenever the input is high.
+    HighLevel,
+    /// An interrupt is triggered whenever the input is low.
+    LowLevel,
 }
 
 /// Peripheral identification structure
@@ -416,7 +419,7 @@ mod tests {
         assert_eq!(0u32, regs.reg_read(GPIOIE));
         let mut pl061 = pl061_for_testing(&mut regs);
 
-        pl061.enable_interrupt(0).unwrap();
+        pl061.enable_interrupt(0, true).unwrap();
         assert_eq!(1u32, regs.reg_read(GPIOIE));
     }
 
@@ -428,7 +431,7 @@ mod tests {
 
         {
             let mut pl061 = pl061_for_testing(&mut regs);
-            pl061.enable_interrupt(0).unwrap();
+            pl061.enable_interrupt(0, true).unwrap();
         }
 
         // Check interrupts are enabled.
@@ -436,7 +439,7 @@ mod tests {
 
         {
             let mut pl061 = pl061_for_testing(&mut regs);
-            pl061.disable_interrupt(0).unwrap();
+            pl061.enable_interrupt(0, false).unwrap();
         }
 
         // Check interrupts are disabled.
@@ -483,39 +486,51 @@ mod tests {
         {
             assert_eq!(0u32, regs.reg_read(GPIOIS));
             let mut pl061 = pl061_for_testing(&mut regs);
-            pl061.set_interrupt_level_sensitive(0).unwrap();
+            pl061
+                .set_interrupt_config(0, InterruptTrigger::LowLevel)
+                .unwrap();
             assert_eq!(1u32, regs.reg_read(GPIOIS));
         }
         {
             assert_eq!(1u32, regs.reg_read(GPIOIS));
             let mut pl061 = pl061_for_testing(&mut regs);
-            pl061.set_interrupt_edge_sensitive(0).unwrap();
+            pl061
+                .set_interrupt_config(0, InterruptTrigger::FallingEdge)
+                .unwrap();
             assert_eq!(0u32, regs.reg_read(GPIOIS));
         }
         regs.clear();
         {
             assert_eq!(0u32, regs.reg_read(GPIOIBE));
             let mut pl061 = pl061_for_testing(&mut regs);
-            pl061.set_interrupt_both_edges(0).unwrap();
+            pl061
+                .set_interrupt_config(0, InterruptTrigger::BothEdges)
+                .unwrap();
             assert_eq!(1u32, regs.reg_read(GPIOIBE));
         }
         {
             assert_eq!(1u32, regs.reg_read(GPIOIBE));
             let mut pl061 = pl061_for_testing(&mut regs);
-            pl061.set_interrupt_single_edge(0).unwrap();
+            pl061
+                .set_interrupt_config(0, InterruptTrigger::FallingEdge)
+                .unwrap();
             assert_eq!(0u32, regs.reg_read(GPIOIBE));
         }
         regs.clear();
         {
             assert_eq!(0u32, regs.reg_read(GPIOIEV));
             let mut pl061 = pl061_for_testing(&mut regs);
-            pl061.set_interrupt_event_rising_high(0).unwrap();
+            pl061
+                .set_interrupt_config(0, InterruptTrigger::RisingEdge)
+                .unwrap();
             assert_eq!(1u32, regs.reg_read(GPIOIEV));
         }
         {
             assert_eq!(1u32, regs.reg_read(GPIOIEV));
             let mut pl061 = pl061_for_testing(&mut regs);
-            pl061.set_interrupt_event_falling_low(0).unwrap();
+            pl061
+                .set_interrupt_config(0, InterruptTrigger::FallingEdge)
+                .unwrap();
             assert_eq!(0u32, regs.reg_read(GPIOIEV));
         }
     }
