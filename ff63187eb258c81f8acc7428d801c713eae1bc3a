@@ -248,6 +248,24 @@
       "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "28a26be5_897a6a5b",
+        "filename": "src/lib.rs",
+        "patchSetId": 5
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1000309
+      },
+      "writtenOn": "2026-01-13T11:16:29Z",
+      "side": 1,
+      "message": "I think it\u0027s a nicer interface for us to handle that complexity in the driver rather than the user having to read all the details in the manual. But I\u0027ll send a separate change to fix that so we can submit this as-is.",
+      "parentUuid": "cfc10992_28be93d6",
+      "revId": "ff63187eb258c81f8acc7428d801c713eae1bc3a",
+      "serverId": "8f6f209b-db1a-4cbf-aa44-c8bc30e9bfda"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "771b6fa7_ce9e763f",
