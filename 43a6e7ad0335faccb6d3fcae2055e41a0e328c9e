@@ -1,0 +1,8 @@
+Verified+1: ci-bot
+Code-Review+2: Andrew Walbran <qwandor@google.com>
+Submitted-by: Andrew Walbran <qwandor@google.com>
+Submitted-at: Tue, 13 Jan 2026 11:16:32 +0000
+Reviewed-on: https://review.trustedfirmware.org/c/arm-firmware-crates/arm-pl061/+/46501
+Comments-Total: 23
+Project: arm-firmware-crates/arm-pl061
+Branch: refs/heads/main
