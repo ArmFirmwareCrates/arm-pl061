@@ -28,3 +28,7 @@ zerocopy = "0.8.31"
 
 [features]
 default = ["embedded-hal"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

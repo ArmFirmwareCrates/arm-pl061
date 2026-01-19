@@ -4,9 +4,15 @@ Driver implementation for the [PL061 GPIO peripheral](https://developer.arm.com/
 
 ## Implemented features
 
+- Configuring pins as inputs or outputs.
+- Read and writing pins, individually or together.
+- Configuring interrupts for pins, and reading interrupt status.
+- Reading peripheral ID registers.
+
 ## Feature flags
 
-## Future plans
+- `embedded-hal`: Adds implementations of [`embedded-hal`] traits for `Pin`. This is enabled by
+  default.
 
 ## License
 
@@ -17,12 +23,14 @@ The project is MIT and Apache-2.0 dual licensed, see `LICENSE-Apache-2.0` and `L
 arm-pl061 is a trustedfirmware.org maintained project. All contributions are ultimately merged by the maintainers
 listed below.
 
-* Bálint Dobszay <balint.dobszay@arm.com>
+- Bálint Dobszay <balint.dobszay@arm.com>
   [balint-dobszay-arm](https://github.com/balint-dobszay-arm)
-* Imre Kis <imre.kis@arm.com>
+- Imre Kis <imre.kis@arm.com>
   [imre-kis-arm](https://github.com/imre-kis-arm)
-* Sandrine Afsa <sandrine.afsa@arm.com>
+- Sandrine Afsa <sandrine.afsa@arm.com>
   [sandrine-bailleux-arm](https://github.com/sandrine-bailleux-arm)
+- Andrew Walbran <qwandor@google.com> [qwandor](https://github.com/qwandor)
+- Jeremi Miller <jeremimiller@google.com> [jrm224](https://github.com/jrm224)
 
 ## Contributing
 
@@ -42,7 +50,8 @@ Arm word trademark.
 
 [1]: https://www.arm.com/company/policies/trademarks/arm-trademark-list
 [2]: https://www.arm.com/company/policies/trademarks/guidelines-trademarks
+[`embedded-hal`]: https://crates.io/crates/embedded-hal
 
---------------
+---
 
-*Copyright The arm-pl061 Contributors.*
+_Copyright The arm-pl061 Contributors._
