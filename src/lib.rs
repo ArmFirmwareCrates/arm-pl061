@@ -88,12 +88,12 @@ pub struct PL061<'a> {
 impl<'a> PL061<'a> {
     /// Creates a new PL061 driver instance from a pointer to the peripheral's
     /// memory-mapped registers.
-    pub fn new(regs: UniqueMmioPointer<'a, PL061Registers>) -> Self {
+    pub const fn new(regs: UniqueMmioPointer<'a, PL061Registers>) -> Self {
         Self { regs }
     }
 
     /// Returns the driver to configure pin and interrupt settings.
-    pub fn config(&mut self) -> PL061Config<'_> {
+    pub const fn config(&mut self) -> PL061Config<'_> {
         PL061Config {
             regs: field!(self.regs, config_registers),
         }
