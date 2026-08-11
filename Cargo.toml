@@ -3,7 +3,7 @@
 
 [package]
 name = "arm-pl061"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 description = "Arm PrimeCell GPIO (PL061) driver"
@@ -17,14 +17,14 @@ repository = "https://git.trustedfirmware.org/arm-firmware-crates/arm-pl061.git"
 keywords = ["arm", "pl061", "gpio", "driver"]
 categories = ["hardware-support", "embedded", "no-std", "no-std::no-alloc"]
 readme = "README.md"
-rust-version = "1.85"
+rust-version = "1.88"
 
 [dependencies]
-bitflags = "2.11.0"
+bitflags = "2.13.1"
 embedded-hal = { version = "1.0.0", optional = true }
-safe-mmio = "0.3.0"
-thiserror = { version = "2.0.18", default-features = false }
-zerocopy = "0.8.31"
+safe-mmio = "0.3.1"
+thiserror = { version = "2.0.20", default-features = false }
+zerocopy = "0.8.56"
 
 [features]
 default = ["embedded-hal"]

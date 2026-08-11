@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+### Other changes
+
+- Updated the MSRV to 1.88.
+
 ## 0.2.0
 
 ### Breaking changes
